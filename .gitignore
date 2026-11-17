@@ -1,0 +1,12 @@
+# Compiled artifacts
+*.beam
+*.test
+counter-go
+
+# Local experiment outputs (commit reviewed evidence deliberately)
+usecases/**/experiments/results/*.jsonl
+usecases/**/experiments/results/*.csv
+
+# Python caches
+__pycache__/
+*.pyc
