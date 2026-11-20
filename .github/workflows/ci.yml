@@ -1,0 +1,36 @@
+name: usecase-01
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: usecases/01-state-ownership/go/go.mod
+      - name: Install Erlang
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y erlang-base erlang-dev
+      - name: Go unit and race tests
+        working-directory: usecases/01-state-ownership/go
+        run: |
+          go test ./...
+          go test -race ./...
+      - name: Matched smoke run
+        run: python3 usecases/01-state-ownership/experiments/run.py --clients 2 --ops 100 --repetitions 1 --output /tmp/erlango-smoke.jsonl
+      - name: Verify smoke output
+        run: |
+          python3 - <<'PY'
+          import json
+          rows=[json.loads(x) for x in open('/tmp/erlango-smoke.jsonl')]
+          assert len(rows)==2
+          assert {r['language'] for r in rows}=={'go','erlang'}
+          assert all(r['operations']==200 for r in rows)
+          PY
